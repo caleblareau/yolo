@@ -1,0 +1,27 @@
+Package: yolo
+Type: Package
+Title:  You Only Link One (small part of a larger structure)
+Version: 0.1.0
+Date: 2016-09-27
+Authors@R: c(
+    person("Caleb", "Lareau", email = "caleblareau@g.harvard.edu", role = c("aut", "cre"))
+Maintainer: Caleb Lareau <caleblareau@g.harvard.edu>
+Author: Caleb Lareau [aut, cre]
+Description: You Only Link One (small part of a larger structure). Classes and methods
+	for reading large matrices from disk using HDF5 and sqlite implementations and annotating
+	the contents with appropriate row and column data.  
+Imports:
+	Matrix
+License: MIT + file LICENSE
+LazyData: TRUE
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat
+VignetteBuilder: knitr
+RoxygenNote: 5.0.1
+biocViews: Preprocessing, DataImport,
+    DataRepresentation, GO
+NeedsCompilation: no
+Collate:
+
