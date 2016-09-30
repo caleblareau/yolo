@@ -1,0 +1,11 @@
+group	feature
+sampleZ1	group1	0
+sampleZ2	group2	0
+sampleZ3	group3	0
+sampleZ4	group4	0
+sampleZ5	group5	0
+sampleZ6	group1	0
+sampleZ7	group2	0
+sampleZ8	group3	0
+sampleZ9	group4	0
+sampleZ10	group5	1

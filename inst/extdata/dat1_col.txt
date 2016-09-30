@@ -1,0 +1,26 @@
+group	feature
+sampleX1	group1	0
+sampleX2	group2	0
+sampleX3	group3	0
+sampleX4	group4	0
+sampleX5	group5	0
+sampleX6	group1	0
+sampleX7	group2	0
+sampleX8	group3	0
+sampleX9	group4	0
+sampleX10	group5	0
+sampleX11	group1	0
+sampleX12	group2	0
+sampleX13	group3	0
+sampleX14	group4	0
+sampleX15	group5	0
+sampleX16	group1	1
+sampleX17	group2	1
+sampleX18	group3	1
+sampleX19	group4	1
+sampleX20	group5	1
+sampleX21	group1	1
+sampleX22	group2	1
+sampleX23	group3	1
+sampleX24	group4	1
+sampleX25	group5	1

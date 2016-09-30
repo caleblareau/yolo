@@ -1,17 +1,24 @@
 Package: yolo
 Type: Package
-Title:  You Only Link One (small part of a larger structure)
+Title: You Only Lookup One (small part of an otherwise large matrix)
 Version: 0.1.0
-Date: 2016-09-27
+Date: 2016-10-02
 Authors@R: c(
     person("Caleb", "Lareau", email = "caleblareau@g.harvard.edu", role = c("aut", "cre"))
+    )
 Maintainer: Caleb Lareau <caleblareau@g.harvard.edu>
 Author: Caleb Lareau [aut, cre]
-Description: You Only Link One (small part of a larger structure). Classes and methods
-	for reading large matrices from disk using HDF5 and sqlite implementations and annotating
-	the contents with appropriate row and column data.  
+Description: You Only Lookup One (small part of an otherwise large matrix).
+    Classes and methods for reading large matrices from disk using
+    HDF5 and sqlite implementations and annotating the contents with
+    appropriate row and column data using RangedSummarizedExperiment.
 Imports:
-	Matrix
+    GenomicRanges,
+    Matrix,
+    methods,
+    RSQLite,
+    S4Vectors,
+    SummarizedExperiment
 License: MIT + file LICENSE
 LazyData: TRUE
 Suggests:
@@ -24,4 +31,6 @@ biocViews: Preprocessing, DataImport,
     DataRepresentation, GO
 NeedsCompilation: no
 Collate:
-
+    'yolo.R'
+    'classDefinitions.R'
+    'constructor.R'
