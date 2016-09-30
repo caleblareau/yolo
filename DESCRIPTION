@@ -14,6 +14,7 @@ Description: You Only Lookup One (small part of an otherwise large matrix).
     appropriate row and column data using RangedSummarizedExperiment.
 Imports:
     GenomicRanges,
+    IRanges,
     Matrix,
     methods,
     RSQLite,
@@ -33,4 +34,6 @@ NeedsCompilation: no
 Collate:
     'yolo.R'
     'classDefinitions.R'
+    'data.R'
     'constructor.R'
+    'subsetting.R'

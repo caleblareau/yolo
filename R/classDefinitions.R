@@ -1,10 +1,10 @@
 #' @include yolo.R
 NULL
 
-#' sqlSparseHandle
+#' rseHandle
 #'
-#' A class to represent sparse matrices stored in
-#' and sql file where the column and row annotations
+#' A class to represent  matrices stored in HDF5
+#' and sqlite files where the column and row annotations
 #' are wrapped in a \code{RangedSummarizedExperiment}
 #' class. 
 #'
@@ -14,7 +14,7 @@ NULL
 #' the current columns to the indicies in the original file. 
 #' 
 #' @export
-sqlSparseHandle <- setClass("sqlSparseHandle",
+rseHandle <- setClass("rseHandle",
     contains="RangedSummarizedExperiment",
     representation = representation(
         rowMap="integer", 
