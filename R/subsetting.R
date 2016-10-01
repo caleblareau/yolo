@@ -10,10 +10,14 @@ NULL
 #' @param x An \code{rseHandle} object to be subset. 
 #' @param i Numeric indices to be subset from rows. 
 #' @param j Numeric indices to be subset from columns
+#' @param drop Other argument to pass to [
 #'
 #' @return Returns a subsetted \code{sqlSparseHandle} object. 
 #' 
 #' @examples
+#' dat2 <- readRDS(system.file("rds", "dat2_ssh.rds", package = "yolo"))
+#' d <- dat2[1:5, 3:4]
+#' d <- rseHandleSubset(dat2, 1:5, 3:4)
 #'
 #' @export
 setGeneric(name = "rseHandleSubset", def = function(x, i, j)
@@ -24,8 +28,8 @@ setMethod("rseHandleSubset", signature("rseHandle", "numeric", "numeric"),
         definition = function(x, i, j) {
 
         existing <- as(x, "RangedSummarizedExperiment")
-        if(i == -999) i <- 1:dim(x)[1]
-        if(j == -999) j <- 1:dim(x)[2]
+        if(i[1] == -999) i <- 1:dim(x)[1]
+        if(j[1] == -999) j <- 1:dim(x)[2]
         rse <- existing[i,j]
         
         # Update mappings
@@ -114,6 +118,10 @@ setMethod("[", signature(x = "rseHandle", i = "logical", j = "missing",
 #' 
 #' @param query An \code{rseHandle} object
 #' @param subject A \code{GRanges} object of the regions of intrest
+#' @param maxgap Refer to \code{GRanges} documentation of this function. 
+#' @param minoverlap Refer to \code{GRanges} documentation of this function. 
+#' @param type Refer to \code{GRanges} documentation of this function. 
+#' @param ... Refer to \code{GRanges} documentation of this function. 
 #' 
 #' @return A \code{rseHandle} object subsetted
 #' after the subjet was filtered 

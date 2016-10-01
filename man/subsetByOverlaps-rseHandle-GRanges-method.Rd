@@ -13,6 +13,14 @@
 \item{query}{An \code{rseHandle} object}
 
 \item{subject}{A \code{GRanges} object of the regions of intrest}
+
+\item{maxgap}{Refer to \code{GRanges} documentation of this function.}
+
+\item{minoverlap}{Refer to \code{GRanges} documentation of this function.}
+
+\item{type}{Refer to \code{GRanges} documentation of this function.}
+
+\item{...}{Refer to \code{GRanges} documentation of this function.}
 }
 \value{
 A \code{rseHandle} object subsetted

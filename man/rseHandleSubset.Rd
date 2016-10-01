@@ -49,6 +49,8 @@ rseHandleSubset(x, i, j)
 \item{i}{Numeric indices to be subset from rows.}
 
 \item{j}{Numeric indices to be subset from columns}
+
+\item{drop}{Other argument to pass to [}
 }
 \value{
 Returns a subsetted \code{sqlSparseHandle} object.
@@ -59,6 +61,9 @@ based on the indicies of i (rowData) and j (colData). Can
 also use the `[` operator as is common in R object subsetting.
 }
 \examples{
+dat2 <- readRDS(system.file("rds", "dat2_ssh.rds", package = "yolo"))
+d <- dat2[1:5, 3:4]
+d <- rseHandleSubset(dat2, 1:5, 3:4)
 
 }
 

@@ -34,6 +34,5 @@ NeedsCompilation: no
 Collate:
     'yolo.R'
     'classDefinitions.R'
-    'data.R'
     'constructor.R'
     'subsetting.R'

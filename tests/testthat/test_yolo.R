@@ -35,10 +35,17 @@ test_that("dat3.rds looks good", {
     expect_equal(dim(d3), dim(dat3))
 })
 
-context(".rds of Sparse SQlite Handles (ssh) are what we expect")
+context("Subsetting works")
 
 test_that("subsetting by range works in handles", {
     dat3 <- readRDS(system.file("rds", "dat3_ssh.rds", package = "yolo"))
     reg <- GRanges(seqnames=c("chr1"),ranges=IRanges(start=c(3318000),end=c(3340000)))
     subsetByOverlaps(as(dat3, "RangedSummarizedExperiment"), reg)
+})
+
+test_that("Square bracket operator behaves", {
+    dat2 <- readRDS(system.file("rds", "dat2_ssh.rds", package = "yolo"))
+    d1 <- dat2[1:5, 3:4]
+    d2 <- rseHandleSubset(dat2, 1:5, 3:4)
+    expect_equal(d1, d2)
 })

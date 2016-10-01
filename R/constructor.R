@@ -1,4 +1,4 @@
-#' @include data.R
+#' @include classDefinitions.R
 NULL
 
 #' Create a \code{rseHandle} object
