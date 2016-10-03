@@ -128,6 +128,13 @@ setMethod("[", signature(x = "rseHandle", i = "logical", j = "missing",
 #' @importMethodsFrom IRanges findOverlaps
 #' @importMethodsFrom IRanges subsetByOverlaps
 #' 
+#' @examples 
+#' library(GenomicRanges)
+#' chr12reg <- GRanges(seqnames=c("chr12"),
+#'      ranges = IRanges(start=c(56150000),end=c(56500000)))
+#' dat2 <- readRDS(system.file("rds", "dat2_ssh.rds", package = "yolo"))
+#' ss <- subsetByOverlaps(dat2, chr12reg)
+#' 
 setMethod("subsetByOverlaps", signature = c("rseHandle", "GRanges"),
     function(query, subject, ...) {
         

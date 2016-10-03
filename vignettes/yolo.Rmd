@@ -1,0 +1,89 @@
+---
+title: "yolo: You Only Lookup One (small part of an otherwise large matrix)"
+author: "Caleb Lareau"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{yolo: You Only Lookup One (small part of an otherwise large matrix).}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## About
+The R package `yolo` is designed to subset large data based on column and row
+attributes based on the familiar `RangedSummarizedExperiment` structure without
+holding the matrix of values in memory. To achieve this, an `rseHandle` S4 object
+is defined that inherits the `RangedSummarizedExperiment` class with the addition
+of two other slots that map the current object's row and column indicies to the 
+original indicies in the file. The `getvalues` command can then evaluate an
+`rseHandle` object and pull the data from the hard disk into memory. While 
+subsetting an `rseHandle` object is endomorphic (i.e. returns an `rseHandle`),
+the output of the `getvalues` is a `RangedSummarizedExperiment` object. 
+
+## Libraries
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+library(GenomicRanges)
+library(yolo)
+library(RSQLite)
+```
+
+## Build Data
+In the current implementation of `yolo`, we support storing data in HDF5
+and sqlite file formats. Below is one simple implementation of converting
+a .csv file that is in a sparse matrix format into a `.sqlite` object. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+f1name <- "d1.sqlite"
+
+db <- dbConnect(SQLite(), dbname=f1name)
+ft <- list(row="INTEGER", column="INTEGER", value="INTEGER")
+df3 <- read.table(system.file("extdata", "dat1.csv", package = "yolo"), sep = "," , header = TRUE)
+head(df3)
+RSQLite::dbWriteTable(conn=db, name="data", value=df3, field.types=ft, overwrite = TRUE)
+dbDisconnect(db)
+```
+
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+readt <- read.table(system.file("extdata", "dat1_row.bed", package = "yolo"))
+rowData <- GRanges(setNames(readt,  c("chr", "start", "stop")))
+colData <- read.table(system.file("extdata", "dat1_col.txt", package = "yolo"))
+```
+
+Now that the column and row data annotations have been imported into our system,
+we can build our `rseHandle` object using the following function below. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+d1 <- rseHandleMake(rowData, colData, lookupFileName = f1name)
+d1
+```
+The `rseHandleMake` function necessarily takes a `GRanges` of the rowData,
+an object that can be coerced into a DataFrame for the colData, and a valid
+file name that contains the values of the matrices on the backend. When the
+constructor function is called, other checks will determine the validity of 
+the construction to ensure that the specified objects will play nicely 
+together. In other words, the constructor checks to make sure the dimensions
+of the rowData and colData represent the dimensions in the backend file. <br><br>
+
+Three other paraters can be specified in the `rseHandleMake` function. Namely,
+the `lookupTableName` specifies the index/table of the backend values. By default,
+the constructor assumes "data" as we specified in the `dbWriteTable` command earlier
+in the vignette. Another import parameter is the `lookupFileType`, which can be
+specified as either "sparse" (by default) or "normal". For a sparse matrix,
+we assume two columns labled "row" and "column" in addition to a third that has
+the specific values. (See the `ft` variable in the constructor). For a "normal"
+matrix, the lookup simply indexes off of row and column positions, so that the
+names are not relevant for that operation. 
+
+## Cleanup
+Without any use for our files on disk, we can tidy up and remove
+them. 
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+file.remove(f1name)
+```
+## Session info
+```{r sessInfo}
+sessionInfo()
+```

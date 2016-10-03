@@ -36,3 +36,4 @@ Collate:
     'classDefinitions.R'
     'constructor.R'
     'subsetting.R'
+    'addition.R'

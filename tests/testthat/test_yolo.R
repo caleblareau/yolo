@@ -40,7 +40,9 @@ context("Subsetting works")
 test_that("subsetting by range works in handles", {
     dat3 <- readRDS(system.file("rds", "dat3_ssh.rds", package = "yolo"))
     reg <- GRanges(seqnames=c("chr1"),ranges=IRanges(start=c(3318000),end=c(3340000)))
-    subsetByOverlaps(as(dat3, "RangedSummarizedExperiment"), reg)
+    s1 <- subsetByOverlaps(as(dat3, "RangedSummarizedExperiment"), reg)
+    s2 <- as(subsetByOverlaps(dat3, reg), "RangedSummarizedExperiment")
+    expect_equal(s1, s2)
 })
 
 test_that("Square bracket operator behaves", {
@@ -48,4 +50,15 @@ test_that("Square bracket operator behaves", {
     d1 <- dat2[1:5, 3:4]
     d2 <- rseHandleSubset(dat2, 1:5, 3:4)
     expect_equal(d1, d2)
+})
+
+context("Addition")
+
+test_that("Adding two samples behaves", {
+    dat1 <- readRDS(system.file("rds", "dat1_ssh.rds", package = "yolo"))
+    dat2 <- readRDS(system.file("rds", "dat2_ssh.rds", package = "yolo"))
+    dat3 <- readRDS(system.file("rds", "dat3_ssh.rds", package = "yolo"))
+    dat4 <- dat1 + dat3
+    expect_equal(dim(dat4)[2], 35)
+    expect_warning(expect_error(dat1 + dat2))
 })
