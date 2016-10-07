@@ -10,8 +10,8 @@ rseHandleMake(rowData, colData, lookupFileName, lookupTableName = "data",
   lookupFileType = "sqlite", lookupFileFormat = "sparse")
 
 \S4method{rseHandleMake}{ANY,ANY,character}(rowData, colData, lookupFileName,
-  lookupTableName = "data", lookupFileType = "sqlite",
-  lookupFileFormat = "sparse")
+  lookupTableName = "data", lookupFileType = "sparse",
+  lookupFileFormat = "sqlite")
 }
 \arguments{
 \item{rowData}{A \code{GRanges} object or something that can be coerced into one.

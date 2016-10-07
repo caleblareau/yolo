@@ -8,9 +8,9 @@
 \S4method{+}{rseHandle,rseHandle}(e1, e2)
 }
 \arguments{
-\item{e1}{A \code{rseHandles} object}
+\item{e1}{A \code{rseHandle} object}
 
-\item{e2}{A \code{rseHandles} object}
+\item{e2}{A \code{rseHandle} object}
 }
 \value{
 An rseHandle object joined
@@ -19,8 +19,11 @@ An rseHandle object joined
 To add multiple \code{rseHandles} together, two rather stringent conditions
 must be met. First, the \code{rowRanges} slots must be identical.
 Moreover, the column names of the \code{colData} slot must also
-be identical. The sames can then be merged into one object, 
-the the varian
+be identical. The samples can then be merged into one object, 
+where e2's samples will be added to the end. The only time that
+order of operations for addition matters is that the meta data of
+the first element being added (e1) will be retained if different
+from the meta data in e2.
 }
 \examples{
 dat1 <- readRDS(system.file("rds", "dat1_ssh.rds", package = "yolo"))

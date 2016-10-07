@@ -1,6 +1,8 @@
 # Sets of test for package
 
 library(GenomicRanges)
+library(rhdf5)
+
 nm <- c("chr", "start", "stop")
 
 context(".rds of Sparse SQlite Handles (ssh) are what we expect")
@@ -51,6 +53,17 @@ test_that("Square bracket operator behaves", {
     d2 <- rseHandleSubset(dat2, 1:5, 3:4)
     expect_equal(d1, d2)
 })
+
+context("HDF5")
+test_that("Adding two samples behaves", {
+    dat1 <- readRDS(system.file("rds", "dat1_ssh.rds", package = "yolo"))
+    dat2 <- readRDS(system.file("rds", "dat2_ssh.rds", package = "yolo"))
+    dat3 <- readRDS(system.file("rds", "dat3_ssh.rds", package = "yolo"))
+    dat4 <- dat1 + dat3
+    expect_equal(dim(dat4)[2], 35)
+    expect_warning(expect_error(dat1 + dat2))
+})
+
 
 context("Addition")
 

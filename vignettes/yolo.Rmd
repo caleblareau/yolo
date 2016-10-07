@@ -13,23 +13,25 @@ vignette: >
 
 ## About
 The R package `yolo` is designed to subset large data based on column and row
-attributes based on the familiar `RangedSummarizedExperiment` structure without
+attributes based on the familiar `RangedSummarizedExperiment` (rse) structure without
 holding the matrix of values in memory. To achieve this, an `rseHandle` S4 object
 is defined that inherits the `RangedSummarizedExperiment` class with the addition
 of two other slots that map the current object's row and column indicies to the 
-original indicies in the file. The `getvalues` command can then evaluate an
-`rseHandle` object and pull the data from the hard disk into memory. While 
+original indicies in the file(s). The `getvalues` command can then evaluate an
+`rseHandle` object and pull the data from the hard disk into memory. While adding and
 subsetting an `rseHandle` object is endomorphic (i.e. returns an `rseHandle`),
 the output of the `getvalues` is a `RangedSummarizedExperiment` object. 
 
 ## Libraries
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 library(GenomicRanges)
+library(SummarizedExperiment)
 library(yolo)
 library(RSQLite)
+library(rhdf5)
 ```
 
-## Build Data
+## Build Data--SQLite
 In the current implementation of `yolo`, we support storing data in HDF5
 and sqlite file formats. Below is one simple implementation of converting
 a .csv file that is in a sparse matrix format into a `.sqlite` object. 
@@ -39,24 +41,23 @@ f1name <- "d1.sqlite"
 
 db <- dbConnect(SQLite(), dbname=f1name)
 ft <- list(row="INTEGER", column="INTEGER", value="INTEGER")
-df3 <- read.table(system.file("extdata", "dat1.csv", package = "yolo"), sep = "," , header = TRUE)
-head(df3)
-RSQLite::dbWriteTable(conn=db, name="data", value=df3, field.types=ft, overwrite = TRUE)
+df1 <- read.table(system.file("extdata", "dat1.csv", package = "yolo"), sep = "," , header = TRUE)
+head(df1)
+RSQLite::dbWriteTable(conn=db, name="data", value=df1, field.types=ft, overwrite = TRUE)
 dbDisconnect(db)
 ```
 
-
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 readt <- read.table(system.file("extdata", "dat1_row.bed", package = "yolo"))
-rowData <- GRanges(setNames(readt,  c("chr", "start", "stop")))
-colData <- read.table(system.file("extdata", "dat1_col.txt", package = "yolo"))
+rowData1 <- GRanges(setNames(readt,  c("chr", "start", "stop")))
+colData1 <- read.table(system.file("extdata", "dat1_col.txt", package = "yolo"))
 ```
 
 Now that the column and row data annotations have been imported into our system,
 we can build our `rseHandle` object using the following function below. 
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-d1 <- rseHandleMake(rowData, colData, lookupFileName = f1name)
+d1 <- rseHandleMake(rowData1, colData1, lookupFileName = f1name)
 d1
 ```
 The `rseHandleMake` function necessarily takes a `GRanges` of the rowData,
@@ -67,22 +68,116 @@ the construction to ensure that the specified objects will play nicely
 together. In other words, the constructor checks to make sure the dimensions
 of the rowData and colData represent the dimensions in the backend file. <br><br>
 
-Three other paraters can be specified in the `rseHandleMake` function. Namely,
+Three other parameters can be specified in the `rseHandleMake` function. Namely,
 the `lookupTableName` specifies the index/table of the backend values. By default,
 the constructor assumes "data" as we specified in the `dbWriteTable` command earlier
 in the vignette. Another import parameter is the `lookupFileType`, which can be
 specified as either "sparse" (by default) or "normal". For a sparse matrix,
 we assume two columns labled "row" and "column" in addition to a third that has
-the specific values. (See the `ft` variable in the constructor). For a "normal"
+the specific values. (See the `ft` variable in the constructor above). For a "normal"
 matrix, the lookup simply indexes off of row and column positions, so that the
-names are not relevant for that operation. 
+names are not relevant for that operation. Finally, the `lookupFileFormat` can
+be either "HDF5" or "SQLite." The call to the `rseHandleMake` function above
+utilized all default values--
+
+(`lookupTableName` = "data", `lookupFileType` = "sparse", `lookupFileFormat` = "sqlite")
+
+## Build Data-- HDF5
+Another implementation uses HDF5. Currently, `yolo` only supports the normal
+matrix implementation (sparse matricies are not supported). This is because 
+the author couldn't find a way to filter to rows based on values. This package
+supports putting multiple tables in either an HDF5 or SQLite file, and the 
+implementation would look similar to the following. 
+
+```{r, echo = TRUE, message = FALSE, warning = FALSE}
+f2name <- "dat.hdf5"
+h5createFile(f2name)
+
+# Read and Reshape 3 data objects to a normal matrix
+df1 <- read.table(system.file("extdata", "dat1.csv", package = "yolo"), sep = "," , header = TRUE)
+dat1m <- reshape2::acast(df1, row ~ column, fill = 0)
+df2 <- read.table(system.file("extdata", "dat2.csv", package = "yolo"), sep = "," , header = TRUE)
+dat2m <- reshape2::acast(df2, row ~ column, fill = 0)
+df3 <- read.table(system.file("extdata", "dat3.csv", package = "yolo"), sep = "," , header = TRUE)
+dat3m <- reshape2::acast(df3, row ~ column, fill = 0)
+
+# Write to file
+h5write(dat1m, "dat.hdf5","dat1")
+h5write(dat2m, "dat.hdf5","dat2")
+h5write(dat3m, "dat.hdf5","dat3")
+
+h5ls("dat.hdf5")
+```
+
+To create an `rseHandle` for the first dataset--
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+d1h <- rseHandleMake(rowData1, colData1, lookupFileName = f2name, lookupTableName = "dat1",
+                     lookupFileFormat = "HDF5", lookupFileType = "normal")
+d1h
+```
+
+We'll also create an `rseHandle` object for the third data object referencing 
+the same HDF5 file but different colData. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+colData3 <- read.table(system.file("extdata", "dat3_col.txt", package = "yolo"))
+d3h <- rseHandleMake(rowData1, colData3, lookupFileName = f2name, lookupTableName = "dat3",
+                     lookupFileFormat = "HDF5", lookupFileType = "normal")
+```
+
+## Addition
+Users can add multiple `rseHandle` objects together as long as
+two condtions are valid--
+
+1) The `rowRanges/rowData` are the same
+2) The names in `colData` are the same
+
+Even though `d1` pulls from a sparse sqlite file and 
+`d3h` pulls from a normal HDF5 file, these two handles
+can be joined together because these two criteria are met. 
+Notice that the resulting object has 35 samples. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+d13 <- d1 + d3h
+d13
+```
+
+This feature allows for samples from different experiments to
+be joined together at a high level again without reading any value data
+into memory aside from the column and row meta data. 
+
+## Subsetting
+Users can subset using the `[` and `subsetByOverlaps` calls that they
+are accustomed to in a standard `RangedSummarizedExperiment`. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+dss1 <- d13[,d13@colData$group == "group4"]
+chr1reg <- GRanges(seqnames=c("chr1"),ranges=IRanges(start=c(3338300),end=c(3422000)))
+dss2 <- subsetByOverlaps(dss1, chr1reg)
+d_small <- dss2[c(2,3,6,7,10), c(2,6,7,3)]
+d_small
+```
+
+## Get values
+Through this process of adding and subsetting, we've jumbled up our samples. 
+Not to worry! Using the `getvalues` function, the representation of our 
+matrix is data will be preserved through keeping track of the indices
+of our files, rows, and columns. 
+
+```{r, echo=TRUE, message=FALSE, warning=FALSE}
+rse_small <- getvalues(d_small)
+assay(rse_small, 1)
+```
 
 ## Cleanup
 Without any use for our files on disk, we can tidy up and remove
 them. 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 file.remove(f1name)
+file.remove(f2name)
 ```
+
 ## Session info
 ```{r sessInfo}
 sessionInfo()

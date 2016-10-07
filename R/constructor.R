@@ -56,6 +56,7 @@ NULL
 #' @import GenomicRanges
 #' @import S4Vectors
 #' @import SummarizedExperiment
+#' @importFrom rhdf5 h5ls
 #' @export
 setGeneric(name = "rseHandleMake", def = function(rowData, colData, lookupFileName,
             lookupTableName = "data", lookupFileType = "sqlite", lookupFileFormat = "sparse")
@@ -64,21 +65,28 @@ setGeneric(name = "rseHandleMake", def = function(rowData, colData, lookupFileNa
 #' @rdname rseHandleMake
 setMethod("rseHandleMake", signature("ANY", "ANY", "character", "ANY"),
         definition = function(rowData, colData, lookupFileName, lookupTableName = "data",
-                              lookupFileType = "sqlite", lookupFileFormat = "sparse") {
+                              lookupFileType = "sparse", lookupFileFormat = "sqlite") {
         options(scipen=999)
         
-        stopifnot(lookupFileType %in% c("HDF5", "sqlite"))
-        stopifnot(lookupFileFormat %in% c("normal", "sparse"))
+        stopifnot(lookupFileFormat %in% c("HDF5", "sqlite"))
+        stopifnot(lookupFileType %in% c("normal", "sparse"))
+        if(lookupFileType == "HDF5" & lookupFileFormat == "sparse") stop("HDF5/sparse combination not supported...")
             
         rowdim <- length(rowData)
         coldim <- dim(colData)[1]
             
         # Grab Max and Min ranges and ensure that file exists
-        if(lookupFileType == "sqlite" & lookupFileFormat == "sparse"){
+        if(lookupFileFormat == "sqlite" & lookupFileType == "sparse"){
             con <- RSQLite::dbConnect(drv=RSQLite::SQLite(), dbname=lookupFileName)
             rowmax <- as.numeric(RSQLite::dbGetQuery(conn=con, statement= paste0('select max(row) from ', lookupTableName)))
             columnmax <- as.numeric(RSQLite::dbGetQuery(conn=con, statement= paste0('select max(column) from ', lookupTableName)))
             RSQLite::dbDisconnect(con)
+        } else if(lookupFileFormat == "HDF5" & lookupFileType == "normal"){
+            rxc <- h5ls("dat.hdf5")[h5ls("dat.hdf5")$name == basename(lookupTableName), 5]
+            if(length(rxc) != 1) stop("Couldn't discern a single table from specification; check HDF5 file")
+            rc <- as.numeric(trimws(strsplit(rxc, "x")[[1]]))
+            rowmax <- rc[1]
+            columnmax <- rc[2]
         }
                 
         if(rowdim != rowmax) stop("Dimension of rows in file/table and rowData don't match!")
