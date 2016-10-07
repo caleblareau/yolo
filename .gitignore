@@ -5,6 +5,9 @@
 # Session Data files
 .RData
 
+# Rpubs 
+vignettes/rsconnect/documents/*.Rmd/rpubs.com/rpubs/*.dcf
+
 # Example code in package build process
 *-Ex.R
 
