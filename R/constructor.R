@@ -80,13 +80,21 @@ setMethod("rseHandleMake", signature("ANY", "ANY", "character", "ANY"),
             con <- RSQLite::dbConnect(drv=RSQLite::SQLite(), dbname=lookupFileName)
             rowmax <- as.numeric(RSQLite::dbGetQuery(conn=con, statement= paste0('select max(row) from ', lookupTableName)))
             columnmax <- as.numeric(RSQLite::dbGetQuery(conn=con, statement= paste0('select max(column) from ', lookupTableName)))
-            RSQLite::dbDisconnect(con)
+            dbDisconnect(con)
         } else if(lookupFileFormat == "HDF5" & lookupFileType == "normal"){
             rxc <- h5ls("dat.hdf5")[h5ls("dat.hdf5")$name == basename(lookupTableName), 5]
             if(length(rxc) != 1) stop("Couldn't discern a single table from specification; check HDF5 file")
             rc <- as.numeric(trimws(strsplit(rxc, "x")[[1]]))
             rowmax <- rc[1]
             columnmax <- rc[2]
+        } else if(lookupFileFormat == "sqlite" & lookupFileType == "normal"){
+            con <- RSQLite::dbConnect(drv=RSQLite::SQLite(), dbname=lookupFileName)
+            columnmax <- length(dbListFields(con, lookupTableName)) -1 
+            sqlcmd <- paste0("SELECT Count(*) FROM ", lookupTableName)
+            rowmax <- as.numeric(dbGetQuery(conn=con, statement=sqlcmd))
+            dbDisconnect(con)
+        } else {
+            stop("Invalid specification of lookupFileFormat and lookupFileType")
         }
                 
         if(rowdim != rowmax) stop("Dimension of rows in file/table and rowData don't match!")

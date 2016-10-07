@@ -3,7 +3,8 @@ NULL
 
 # Grab column and rows from file specified in rn character vector
 # 3 is the type; 4 is the format; 1 is the file name; 2 is the index/table
-getWrapper <- function(row, column, rn){
+# Sample names are needed for sqlite normal matrix
+getWrapper <- function(row, column, rn, sampleNames){
     if(rn[3] == "sparse" & rn[4] == "sqlite"){
         con <- dbConnect(drv=RSQLite::SQLite(), dbname=rn[1])
         sqlcmd <- paste0('select * from ', rn[2],' where row in (', paste(row, collapse=','), ') and column in (', paste(column, collapse=','),')')
@@ -12,6 +13,15 @@ getWrapper <- function(row, column, rn){
         return(mat)
     } else if(rn[3] == "normal" & rn[4] == "HDF5"){
         return(h5read(rn[1], rn[2], index=list(row,column)))
+    } else if(rn[3] == "normal" & rn[4] == "sqlite"){
+        samples <- sampleNames[column]
+        con <- dbConnect(drv=RSQLite::SQLite(), dbname=rn[1])
+        sqlcmd <- paste0('select ', paste(samples, collapse=','),' from ', rn[2],' where row_names in (', paste(row, collapse=','), ')') 
+        mat <- dbGetQuery(conn=con, statement=sqlcmd)
+        dbDisconnect(con)
+        return(mat)
+    } else {
+        stop("Invalid backend file specification")   
     }
 }
 
@@ -21,7 +31,7 @@ cleanup <- function(dat, cols, rowMap, colMap, type, format){
     s_colMap <- as.numeric(names(colMap))
     names(s_colMap) <- as.character(unname(colMap))
     
-    sparse_matrices <- sapply(1:length(type), function(i){
+    sparse_matrices <- lapply(1:length(type), function(i){
         samples <- cols[[i]]
         if(type[i] == "sparse"){
             scm <- s_colMap[samples]
@@ -30,13 +40,15 @@ cleanup <- function(dat, cols, rowMap, colMap, type, format){
             d <- dat[[i]]
             colnames(d) <- samples
             rownames(d) <- seq(1, dim(d)[1], 1)
-            lmat <- reshape2::melt(d)[reshape2::melt(d)[,3] != 0,]
+            md <- reshape2::melt(data.matrix(d))
+            lmat <- md[md[,3] != 0,]
             colnames(lmat) <- NULL
         }
             rownames(lmat) <- NULL
             return(data.matrix(lmat))
     })
     sm <- do.call("rbind", sparse_matrices)
+        
     if(format == "sparse"){
         return(Matrix::sparseMatrix(i = sm[,1], j = sm[,2], x = sm[,3]))
     } else {
@@ -87,7 +99,7 @@ setMethod("getvalues", c("rseHandle", "ANY"),
             dat <- lapply(1:n, function(i){
                 col <- cols[[i]]
                 coltrans <- unname(handle@colMap[col])
-                getWrapper(rowtrans, coltrans, as.character(rn[i,]))
+                getWrapper(rowtrans, coltrans, as.character(rn[i,]), colnames(handle))
             })
             
             # Make final matrix with correct indicies; drop lookups; return RSE

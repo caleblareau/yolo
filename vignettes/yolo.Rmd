@@ -31,9 +31,20 @@ library(RSQLite)
 library(rhdf5)
 ```
 
-## Build Data--SQLite
+## Build Data
 In the current implementation of `yolo`, we support storing data in HDF5
-and sqlite file formats. Below is one simple implementation of converting
+and sqlite file formats. Tables in these files may either be sparse
+(three columns) or in a normal matrix representation. Though not
+directly part of the this package, we show examples how to export
+R data objects and files to HDF5 and SQLite file formats using the
+`rhdf5` and `RSQLite` packages. <br> <br> Notes: 
+
+1) the combination of "sparse" and "hdf5" are not supported.
+2) all parameters throughout these functions should have no
+capital letters by convention.
+
+### sparse SQLite
+Below is one simple implementation of converting
 a .csv file that is in a sparse matrix format into a `.sqlite` object. 
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
@@ -43,9 +54,12 @@ db <- dbConnect(SQLite(), dbname=f1name)
 ft <- list(row="INTEGER", column="INTEGER", value="INTEGER")
 df1 <- read.table(system.file("extdata", "dat1.csv", package = "yolo"), sep = "," , header = TRUE)
 head(df1)
-RSQLite::dbWriteTable(conn=db, name="data", value=df1, field.types=ft, overwrite = TRUE)
+dbWriteTable(conn=db, name="data", value=df1, field.types=ft)
 dbDisconnect(db)
 ```
+
+The commands above create the "d1.sqlite" file, which can be linked to appropriate
+column and row data to create an `rseHandle` object. First, we import these data--
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 readt <- read.table(system.file("extdata", "dat1_row.bed", package = "yolo"))
@@ -53,8 +67,7 @@ rowData1 <- GRanges(setNames(readt,  c("chr", "start", "stop")))
 colData1 <- read.table(system.file("extdata", "dat1_col.txt", package = "yolo"))
 ```
 
-Now that the column and row data annotations have been imported into our system,
-we can build our `rseHandle` object using the following function below. 
+Next, we can build our `rseHandle` object using the following function below. 
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 d1 <- rseHandleMake(rowData1, colData1, lookupFileName = f1name)
@@ -82,7 +95,7 @@ utilized all default values--
 
 (`lookupTableName` = "data", `lookupFileType` = "sparse", `lookupFileFormat` = "sqlite")
 
-## Build Data-- HDF5
+### normal HDF5
 Another implementation uses HDF5. Currently, `yolo` only supports the "normal"
 matrix implementation (sparse matricies are not supported). This is because 
 the author couldn't find a way to filter to rows based on values. This package
@@ -126,6 +139,29 @@ colData3 <- read.table(system.file("extdata", "dat3_col.txt", package = "yolo"))
 d3h <- rseHandleMake(rowData1, colData3, lookupFileName = f2name, lookupTableName = "dat3",
                      lookupFileFormat = "HDF5", lookupFileType = "normal")
 ```
+
+### normal SQLite
+For normal matrices, we recommend the HDF5 construct. However, if a user
+prefers SQLite, this is supported. Our package assumes 1) the existance of
+a "row_names" attribute in the table (automatically generated when 
+`row.names = TRUE` as shown below) and 2) that each column name
+corresponds to the sample names (or names of the colData) in the
+collated object. Below is an example of this construction. 
+
+```{r, echo = TRUE, messgage = FALSE, warning = FALSE}
+colnames(dat3m) <- rownames(colData3)
+dat3m <- data.frame(dat3m)
+db <- dbConnect(SQLite(), dbname=f1name)
+dbWriteTable(conn=db, name="data3", value=dat3m, row.names=TRUE)
+dbListFields(db, "data3")
+dbDisconnect(db)
+
+d3s <- rseHandleMake(rowData1, colData3, lookupFileName = f1name, lookupTableName = "data3",
+                     lookupFileFormat = "sqlite", lookupFileType = "normal")
+```
+
+Again, we recommend working with HDF5 files for normal matrices. For sparse matrices,
+SQLite is currently the only supported format. 
 
 ## Addition
 Users can add multiple `rseHandle` objects together as long as
