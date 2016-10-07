@@ -77,16 +77,16 @@ we assume two columns labled "row" and "column" in addition to a third that has
 the specific values. (See the `ft` variable in the constructor above). For a "normal"
 matrix, the lookup simply indexes off of row and column positions, so that the
 names are not relevant for that operation. Finally, the `lookupFileFormat` can
-be either "HDF5" or "SQLite." The call to the `rseHandleMake` function above
+be either "HDF5" or "sqlite". The call to the `rseHandleMake` function above
 utilized all default values--
 
 (`lookupTableName` = "data", `lookupFileType` = "sparse", `lookupFileFormat` = "sqlite")
 
 ## Build Data-- HDF5
-Another implementation uses HDF5. Currently, `yolo` only supports the normal
+Another implementation uses HDF5. Currently, `yolo` only supports the "normal"
 matrix implementation (sparse matricies are not supported). This is because 
 the author couldn't find a way to filter to rows based on values. This package
-supports putting multiple tables in either an HDF5 or SQLite file, and the 
+supports putting multiple tables in either an HDF5 or sqlite file, and the 
 implementation would look similar to the following. 
 
 ```{r, echo = TRUE, message = FALSE, warning = FALSE}
@@ -118,7 +118,8 @@ d1h
 ```
 
 We'll also create an `rseHandle` object for the third data object referencing 
-the same HDF5 file but different colData. 
+the same HDF5 file but different colData. (`dat1` and `dat3` were designed 
+to have the same `rowData`). 
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 colData3 <- read.table(system.file("extdata", "dat3_col.txt", package = "yolo"))
@@ -167,8 +168,14 @@ of our files, rows, and columns.
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 rse_small <- getvalues(d_small)
+class(rse_small)
 assay(rse_small, 1)
 ```
+
+Up until this `getvalues` command, none of the values of the matrix
+were being stored into disk. Thus, we could add and remove samples
+as well as filter row regions based on `GRanges` or index logic and
+maintain the correct annotations corresponding to our data. 
 
 ## Cleanup
 Without any use for our files on disk, we can tidy up and remove
