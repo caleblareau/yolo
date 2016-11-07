@@ -58,16 +58,17 @@ cleanup <- function(dat, cols, rowMap, colMap, type, format){
 
 
 #' Evaluate an \code{rseHandle} object and return a
-#' \code{RangedSummarizedExperiment}
+#' \code{RangedSummarizedExperiment} or a \code{seHandle}
+#' object and rturn a \code{SummarizedExperiment}
 #'
-#' \code{getvalues} evaluates any valid  \code{rseHandle} object
+#' \code{getvalues} evaluates any valid  \code{yoloHandle} object
 #' and loads data into memory that is ordinarily located on disk.
 #' 
-#' @param handle An \code{rseHandle} object. 
+#' @param handle An  \code{seHandle} or \code{rseHandle} object. 
 #' @param format = "sparse" or "normal". Representation of data
 #' when evaluted. 
 #'
-#' @return Returns a \code{RangedSummarizedExperiment} object. 
+#' @return Returns a \code{(Ranged)SummarizedExperiment} object. 
 #'
 #' @importFrom reshape2 acast melt
 #' @importFrom rhdf5 h5read
@@ -77,14 +78,15 @@ setGeneric(name = "getvalues", def = function(handle, format = "sparse")
     standardGeneric("getvalues"))
 
 #' @rdname getvalues
-setMethod("getvalues", c("rseHandle", "ANY"),
+setMethod("getvalues", c("yoloHandle", "ANY"),
         definition = function(handle, format = "sparse") {
             
+            beast <- ifelse(as.character(class(handle)) == "rseHandle", "rse", "se")
             stopifnot(format %in% c("sparse", "normal"))
             holyfour <- c("lookupFileName", "lookupTableName", "lookupFileType", "lookupFileFormat")
             
             # Define lookup table (lt) and iterate over row names (rn)
-            lt <- data.frame(handle@colData[,holyfour])
+            lt <- data.frame(colData(handle)[,holyfour])
             rn <- unique(lt)
             rownames(rn) <- NULL
             n <- dim(rn)[1]
@@ -104,8 +106,13 @@ setMethod("getvalues", c("rseHandle", "ANY"),
             
             # Make final matrix with correct indicies; drop lookups; return RSE
             mat <- cleanup(dat = dat, cols = cols, rowMap = handle@rowMap, colMap = handle@colMap, type = rn$lookupFileType, format = format)
-            rse <- as(handle, "RangedSummarizedExperiment")
-            rse@assays <- Assays(list(data=mat))
-            rse@colData <- rse@colData[,-which(names(rse@colData) %in% holyfour)]
-            return(rse)
+            if(beast == "rse"){
+                x <- as(handle, "RangedSummarizedExperiment")
+            } else {
+                x <- as(handle, "SummarizedExperiment")
+            }
+            x@assays <- Assays(list(data=mat))
+            x@colData <- x@colData[,-which(names(x@colData) %in% holyfour)]
+            return(x)
 })
+

@@ -1,8 +1,8 @@
 Package: yolo
 Type: Package
 Title: You Only Lookup One (small part of an otherwise large matrix)
-Version: 0.1.1
-Date: 2016-10-07
+Version: 0.2
+Date: 2016-11-07
 Authors@R: c(
     person("Caleb", "Lareau", email = "caleblareau@g.harvard.edu", role = c("aut", "cre"))
     )

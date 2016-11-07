@@ -7,7 +7,8 @@
 \code{GRanges} object}
 \usage{
 \S4method{subsetByOverlaps}{rseHandle,GRanges}(query, subject, maxgap = 0L,
-  minoverlap = 1L, type = c("any", "start", "end", "within", "equal"), ...)
+  minoverlap = 1L, type = c("any", "start", "end", "within", "equal"),
+  invert = FALSE, ...)
 }
 \arguments{
 \item{query}{An \code{rseHandle} object}
@@ -19,6 +20,8 @@
 \item{minoverlap}{Refer to \code{GRanges} documentation of this function.}
 
 \item{type}{Refer to \code{GRanges} documentation of this function.}
+
+\item{invert}{Refer to \code{GRanges} documentation of this function.}
 
 \item{...}{Refer to \code{GRanges} documentation of this function.}
 }

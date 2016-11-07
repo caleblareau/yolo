@@ -13,14 +13,21 @@ vignette: >
 
 ## About
 The R package `yolo` is designed to subset large data based on column and row
-attributes based on the familiar `RangedSummarizedExperiment` (rse) structure without
+attributes based on the familiar `RangedSummarizedExperiment` (rse) and
+`SummarizedExperiment` (rse) structures without
 holding the matrix of values in memory. To achieve this, an `rseHandle` S4 object
 is defined that inherits the `RangedSummarizedExperiment` class with the addition
 of two other slots that map the current object's row and column indicies to the 
-original indicies in the file(s). The `getvalues` command can then evaluate an
-`rseHandle` object and pull the data from the hard disk into memory. While adding and
-subsetting an `rseHandle` object is endomorphic (i.e. returns an `rseHandle`),
-the output of the `getvalues` is a `RangedSummarizedExperiment` object. 
+original indicies in the file(s). Analogously, the `seHandle` inherits the
+`SummarizedExperiment` class when the rowspace is not a `GRanges` object. Jointly,
+we refer to the union of `rseHandle` and `seHandle` objects as `yoloHandle` objects. 
+
+The `getvalues` command can then evaluate an
+`yoloHandle` object and pull the data from the hard disk into memory. While adding and
+subsetting an `yoloHandle` object is endomorphic (i.e. returns the same
+`rseHandle` or `seHandle` supplied by the user),
+the output of the `getvalues` is a `RangedSummarizedExperiment` object or a
+`SummarizedExperiment` object depending on which is evaluated. 
 
 ## Libraries
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
@@ -70,18 +77,20 @@ colData1 <- read.table(system.file("extdata", "dat1_col.txt", package = "yolo"))
 Next, we can build our `rseHandle` object using the following function below. 
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-d1 <- rseHandleMake(rowData1, colData1, lookupFileName = f1name)
+d1 <- yoloHandleMake(rowData1, colData1, lookupFileName = f1name)
 d1
 ```
-The `rseHandleMake` function necessarily takes a `GRanges` of the rowData,
-an object that can be coerced into a DataFrame for the colData, and a valid
+The `yoloHandleMake` function necessarily takes a `GRanges` of the rowData,
+when wanting to create an `rseHandle` and a `DataFrame` object when constructing
+an `seHandle` object. In both cases, the constructor also takes
+an object that can be coerced into a DataFrame for the colData and a valid
 file name that contains the values of the matrices on the backend. When the
 constructor function is called, other checks will determine the validity of 
 the construction to ensure that the specified objects will play nicely 
 together. In other words, the constructor checks to make sure the dimensions
 of the rowData and colData represent the dimensions in the backend file. <br><br>
 
-Three other parameters can be specified in the `rseHandleMake` function. Namely,
+Three other parameters can be specified in the `yoloHandleMake` function. Namely,
 the `lookupTableName` specifies the index/table of the backend values. By default,
 the constructor assumes "data" as we specified in the `dbWriteTable` command earlier
 in the vignette. Another import parameter is the `lookupFileType`, which can be
@@ -90,7 +99,7 @@ we assume two columns labled "row" and "column" in addition to a third that has
 the specific values. (See the `ft` variable in the constructor above). For a "normal"
 matrix, the lookup simply indexes off of row and column positions, so that the
 names are not relevant for that operation. Finally, the `lookupFileFormat` can
-be either "HDF5" or "sqlite". The call to the `rseHandleMake` function above
+be either "HDF5" or "sqlite". The call to the `yoloHandleMake` function above
 utilized all default values--
 
 (`lookupTableName` = "data", `lookupFileType` = "sparse", `lookupFileFormat` = "sqlite")
@@ -125,7 +134,7 @@ h5ls("dat.hdf5")
 To create an `rseHandle` for the first dataset--
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
-d1h <- rseHandleMake(rowData1, colData1, lookupFileName = f2name, lookupTableName = "dat1",
+d1h <- yoloHandleMake(rowData1, colData1, lookupFileName = f2name, lookupTableName = "dat1",
                      lookupFileFormat = "HDF5", lookupFileType = "normal")
 d1h
 ```
@@ -136,7 +145,7 @@ to have the same `rowData`).
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE}
 colData3 <- read.table(system.file("extdata", "dat3_col.txt", package = "yolo"))
-d3h <- rseHandleMake(rowData1, colData3, lookupFileName = f2name, lookupTableName = "dat3",
+d3h <- yoloHandleMake(rowData1, colData3, lookupFileName = f2name, lookupTableName = "dat3",
                      lookupFileFormat = "HDF5", lookupFileType = "normal")
 ```
 
@@ -156,7 +165,7 @@ dbWriteTable(conn=db, name="data3", value=dat3m, row.names=TRUE)
 dbListFields(db, "data3")
 dbDisconnect(db)
 
-d3s <- rseHandleMake(rowData1, colData3, lookupFileName = f1name, lookupTableName = "data3",
+d3s <- yoloHandleMake(rowData1, colData3, lookupFileName = f1name, lookupTableName = "data3",
                      lookupFileFormat = "sqlite", lookupFileType = "normal")
 ```
 
@@ -210,7 +219,7 @@ assay(rse_small, 1)
 
 Up until this `getvalues` command, none of the values of the matrix
 were being stored into disk. Thus, we could add and remove samples
-as well as filter row regions based on `GRanges` or index logic and
+as well as filter row regions based on `GRanges/DataFrame` or index logic and
 maintain the correct annotations corresponding to our data. 
 
 ## Cleanup

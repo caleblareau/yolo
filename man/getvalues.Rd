@@ -3,25 +3,26 @@
 \docType{methods}
 \name{getvalues}
 \alias{getvalues}
-\alias{getvalues,rseHandle-method}
+\alias{getvalues,yoloHandle-method}
 \title{Evaluate an \code{rseHandle} object and return a
-\code{RangedSummarizedExperiment}}
+\code{RangedSummarizedExperiment} or a \code{seHandle}
+object and rturn a \code{SummarizedExperiment}}
 \usage{
 getvalues(handle, format = "sparse")
 
-\S4method{getvalues}{rseHandle}(handle, format = "sparse")
+\S4method{getvalues}{yoloHandle}(handle, format = "sparse")
 }
 \arguments{
-\item{handle}{An \code{rseHandle} object.}
+\item{handle}{An  \code{seHandle} or \code{rseHandle} object.}
 
 \item{format}{= "sparse" or "normal". Representation of data
 when evaluted.}
 }
 \value{
-Returns a \code{RangedSummarizedExperiment} object.
+Returns a \code{(Ranged)SummarizedExperiment} object.
 }
 \description{
-\code{getvalues} evaluates any valid  \code{rseHandle} object
+\code{getvalues} evaluates any valid  \code{yoloHandle} object
 and loads data into memory that is ordinarily located on disk.
 }
 

@@ -2,7 +2,7 @@
 #'
 #' The yolo package contains a suite of methods and S4 data objects to
 #' efficiently manipulate large genomic experiments in the 
-#' \code{RangedSummarizedExperiment} inheritence scheme for 
+#' \code{(Ranged)SummarizedExperiment} inheritence scheme for 
 #' manipulating data. 
 #' 
 #' @section yolo classes: Listed in classDefinitions.R. These are
