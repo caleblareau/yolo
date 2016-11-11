@@ -5,11 +5,15 @@ NULL
 # 3 is the type; 4 is the format; 1 is the file name; 2 is the index/table
 # Sample names are needed for sqlite normal matrix
 getWrapper <- function(row, column, rn, sampleNames){
-    if(rn[3] == "sparse" & rn[4] == "sqlite"){
+
+        if(rn[3] == "sparse" & rn[4] == "sqlite"){
         con <- dbConnect(drv=RSQLite::SQLite(), dbname=rn[1])
         sqlcmd <- paste0('select * from ', rn[2],' where row in (', paste(row, collapse=','), ') and column in (', paste(column, collapse=','),')')
         mat <- dbGetQuery(conn=con, statement=sqlcmd)
         dbDisconnect(con)
+        # Check/fix  dimensionality problems
+        if((max(mat$row) != max(row)) | (max(mat$column) != max(column)))  mat <- rbind(mat, c(max(row), max(column), 0))
+        
         return(mat)
     } else if(rn[3] == "normal" & rn[4] == "HDF5"){
         return(h5read(rn[1], rn[2], index=list(row,column)))
@@ -101,7 +105,7 @@ setMethod("getvalues", c("yoloHandle", "ANY"),
             dat <- lapply(1:n, function(i){
                 col <- cols[[i]]
                 coltrans <- unname(handle@colMap[col])
-                getWrapper(rowtrans, coltrans, as.character(rn[i,]), colnames(handle))
+                getWrapper(rowtrans, coltrans, as.character(unname(unlist(rn[i,]))), colnames(handle))
             })
             
             # Make final matrix with correct indicies; drop lookups; return RSE
@@ -112,7 +116,7 @@ setMethod("getvalues", c("yoloHandle", "ANY"),
                 x <- as(handle, "SummarizedExperiment")
             }
             x@assays <- Assays(list(data=mat))
-            x@colData <- x@colData[,-which(names(x@colData) %in% holyfour)]
+            x@colData <- x@colData[,-which(names(x@colData) %in% holyfour),drop = FALSE]
             return(x)
 })
 

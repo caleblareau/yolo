@@ -111,6 +111,11 @@ setMethod("yoloHandleMake", signature("ANY", "ANY", "character", "ANY"),
         colData$lookupFileType   <- lookupFileType
         colData$lookupFileFormat <- lookupFileFormat
         
+        colData$lookupFileName   <- as.factor(colData$lookupFileName)
+        colData$lookupTableName  <- as.factor(colData$lookupTableName)
+        colData$lookupFileType   <- as.factor(colData$lookupFileType)
+        colData$lookupFileFormat <- as.factor(colData$lookupFileFormat)
+        
         # Constructor
         if(beast == "rse"){
             rse <- SummarizedExperiment(rowRanges=rowData, colData=DataFrame(colData))
