@@ -12,4 +12,6 @@
 #' @docType package
 #' @name yolo
 #' @import methods
+#' @import Rcpp
+#' @useDynLib yolo
 NULL

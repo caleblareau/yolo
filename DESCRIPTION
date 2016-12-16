@@ -1,8 +1,8 @@
 Package: yolo
 Type: Package
 Title: You Only Lookup One (small part of an otherwise large matrix)
-Version: 0.2
-Date: 2016-11-07
+Version: 0.3.0
+Date: 2016-12-16
 Authors@R: c(
     person("Caleb", "Lareau", email = "caleblareau@g.harvard.edu", role = c("aut", "cre"))
     )
@@ -10,13 +10,14 @@ Maintainer: Caleb Lareau <caleblareau@g.harvard.edu>
 Author: Caleb Lareau [aut, cre]
 Description: You Only Lookup One (small part of an otherwise large matrix).
     Classes and methods for reading large matrices from disk using
-    HDF5 and sqlite implementations and annotating the contents with
-    appropriate row and column data using RangedSummarizedExperiment.
+    HDF5, sqlite, and Cpp implementations and annotating the contents with
+    appropriate row and column data using SummarizedExperiment classes. 
 Imports:
     GenomicRanges,
     IRanges,
     Matrix,
     methods,
+    Rcpp (>= 0.12.8),
     reshape2,
     rhdf5,
     RSQLite,
@@ -33,10 +34,13 @@ RoxygenNote: 5.0.1
 biocViews: Preprocessing, DataImport,
     DataRepresentation, GO
 NeedsCompilation: no
+LinkingTo: Rcpp
 Collate:
+    'RcppExports.R'
     'yolo.R'
     'classDefinitions.R'
     'constructor.R'
     'subsetting.R'
     'addition.R'
     'getvalues.R'
+    'testing.R'
